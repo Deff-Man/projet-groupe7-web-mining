@@ -1,78 +1,84 @@
 import os
-import time
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-# 1. Importation de tes modules (fichiers .py)
-# Assure-toi que les fichiers sont dans le même dossier
+# Import scrapping modules
 from Notion_scrapping import run_notion
 from Adobe_scrapping import run_adobe
+from Dropbox_scrapping import run_dropbox
+from SAP_scrapping import run_sap
+from Salesforce_scrapping import run_salesforce
+from Zoom_scrapping import run_zoom
 
 def main():
-    # --- CONFIGURATION ---
-    # Chemin vers ton dossier de sortie (Master 1 Web Mining)
+    # Define the output and file path
     OUTPUT_FOLDER = r"C:\Users\User\Desktop\Master 1\Web mining\Scrapper"
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-    FINAL_OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "notion_faq_commun.csv")
+    FINAL_OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "faq_commun.csv")
 
-    # Configuration du Driver Selenium (Une seule fois pour tout le projet)
+    # Configure Chrome options 
     options = Options()
     options.add_argument("--disable-gpu")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
     
-    # Lancement du navigateur
+    # Initialize the WebDriver 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    # Liste pour stocker les DataFrames de chaque site
+    # List to store results from each site
     all_dataframes = []
 
+    # Map of scrapers to execute
+    scrapers = [
+        ("Notion", run_notion),
+        ("Adobe", run_adobe),
+        ("Dropbox", run_dropbox),
+        ("SAP", run_sap),
+        ("Salesforce", run_salesforce),
+        ("Zoom", run_zoom)]
+
     try:
-        print("Starting the Global FAQ Scraper...")
-        print("="*40)
 
+        # Loop through each scraper to collect data
+        for name, func in scrapers:
+            print(f"\n[Running] {name} Scrapping : ")
+            try:
+                # Execute the scrapping function
+                df = func(driver)
+                
+                # Check if data was successfully collected
+                if df is not None and not df.empty:
+                    all_dataframes.append(df)
+                    print(f"-> {name} success: {len(df)} rows found.")
+                else:
+                    print(f"-> {name} warning: No data returned.")
 
-        # --- MODULE 3: NOTION ---
-        print("\n[Step 3/3] Running Notion Module...")
-        df_notion = run_notion(driver)
-        if not df_notion.empty:
-            all_dataframes.append(df_notion)
-            print(f"Notion done: {len(df_notion)} rows found.")
+            except Exception as e:
+                # Individual module error 
+                print(f"-> {name} failed: {e}")
 
-        # --- MODULE 3: NOTION ---
-        print("\n[Step 3/3] Running Adobe Module...")
-        df_adobe = run_adobe(driver)
-        if not df_adobe.empty:
-            all_dataframes.append(df_adobe)
-            print(f"Adobe done: {len(df_adobe)} rows found.")
-
-        # --- FUSION & SAUVEGARDE ---
+        # Data saving
         if all_dataframes:
-            print("\n" + "="*40)
-            print("Merging all results...")
-            
-            # Concaténation des DataFrames (ignore_index réinitialise les numéros de ligne)
+
+            # Concatenate all collected DataFrames 
             final_df = pd.concat(all_dataframes, ignore_index=True)
 
-            # Sauvegarde en format CSV compatible Excel
+            # Export to CSV 
             final_df.to_csv(FINAL_OUTPUT_FILE, index=False, encoding="utf-8-sig")
             
-            print(f" SUCCESS: Consolidated file saved at:")
+            print(f"SUCCESS: Consolidated file saved at :")
             print(f"{FINAL_OUTPUT_FILE}")
-            print(f"Total rows collected: {len(final_df)}")
+            print(f"Total rows collected across all sites: {len(final_df)}")
         else:
-            print("\nNo data collected from any site.")
+            print("\nProcess finished but no data was collected from any site.")
 
     except Exception as e:
         print(f"\nCRITICAL ERROR during orchestration: {e}")
 
     finally:
-        # Fermeture propre du navigateur
-        print("\nClosing browser...")
         driver.quit()
-        print("Process finished.")
 
 if __name__ == "__main__":
     main()
