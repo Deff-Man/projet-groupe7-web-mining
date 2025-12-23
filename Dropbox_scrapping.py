@@ -204,6 +204,6 @@ def run_dropbox(driver):
     # Start scraping
     crawl(driver, MAIN_URL, 0, visited, data)
 
-    print(f"-- Finished Notion FAQ Scrapping ({len(data)} rows) ---")
+    print(f"-- Finished Dropbox FAQ Scrapping ({len(data)} rows) ---")
     return pd.DataFrame(data)
 
