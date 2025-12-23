@@ -8,11 +8,6 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from deep_translator import GoogleTranslator
 
-# Output folder and file path
-OUTPUT_FOLDER = r"C:\Users\User\Desktop\Master 1\Web mining\Scrapper"
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "adobe_faq.csv")
-
 # Main URL to start scraping
 MAIN_URL = "https://helpx.adobe.com/acrobat/faq.html"
 SITE_NAME = "Adobe"
@@ -219,38 +214,19 @@ def crawl(driver, url, depth, visited, seen_questions, rows):
 
 
 # -- MAIN --
-def main():
-    # Configure Chrome options
-    options = Options()
-    options.add_argument("--disable-gpu")
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
-
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=options)
-
+def run_adobe(driver):
+    
     data = []
     visited = set()
-    seen_questions = set() 
+    seen_questions = set()
 
-    try:
-        # Load the main FAQ page
-        driver.get(MAIN_URL)
-        time.sleep(2)
-
-        # Start scraping
-        crawl(driver, MAIN_URL, 0, visited, seen_questions, data)
+  
+    # Load the main FAQ page
+    driver.get(MAIN_URL)
+    time.sleep(2)
         
-        # Save results to CSV
-        df = pd.DataFrame(data)
-        df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
-        print(f"\nFile saved at:\n{OUTPUT_FILE}")
+    # Start scraping
+    crawl(driver, MAIN_URL, 0, visited, seen_questions, data)
 
-    finally:
-        driver.quit()
-
-
-if __name__ == "__main__":
-    main()
+    print(f"-- Finished Adobe FAQ Scrapping ({len(data)} rows) ---")
+    return pd.DataFrame(data)
