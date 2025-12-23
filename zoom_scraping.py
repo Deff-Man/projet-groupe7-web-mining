@@ -217,3 +217,4 @@ def run_zoom(driver):
     print(f"-- Finished Zoom FAQ Scrapping ({len(data)} rows) ---")
     return pd.DataFrame(data)
 
+
