@@ -9,7 +9,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 from urllib.parse import urlparse
 from deep_translator import GoogleTranslator
 
-
 # Main URL to start scraping
 MAIN_URL = "https://www.dropbox.com/en/business/faqs"
 SITE_NAME = "Dropbox"
