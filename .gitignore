@@ -1,2 +1,4 @@
-__pycache__/Adobe_scrapping.cpython-313.pyc
-__pycache__/Notion_scrapping.cpython-313.pyc
+# Ignorer tous les dossiers de cache Python
+__pycache__/
+*.pyc
+
