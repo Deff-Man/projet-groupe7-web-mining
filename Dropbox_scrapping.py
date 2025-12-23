@@ -70,7 +70,7 @@ def get_answer(driver, question_element):
 
 # -- Recursive scraper --
 
-def crawl(driver, url, depth, visited, rows):
+def crawl(driver, url, depth, visited, seen_questions, rows):
     # Skip URL(s) that have already been visited
     if url in visited or depth > MAX_DEPTH:
         return
@@ -99,15 +99,15 @@ def crawl(driver, url, depth, visited, rows):
 
         # Find all possible question elements 
         questions_elements = driver.find_elements(By.CLASS_NAME, "dwg-accordion-item__label")
-        seen = set()
+     
 
         for q in questions_elements:
             q_text_raw = clean_text(q)
 
             # Filter out non-questions or duplicates
-            if "?" not in q_text_raw or len(q_text_raw) < 10 or q_text_raw in seen:
+            if "?" not in q_text_raw or len(q_text_raw) < 10 or q_text_raw in seen_questions:
                 continue
-            seen.add(q_text_raw)
+            seen_questions.add(q_text_raw)
 
             # Category
             category = "NA"
@@ -181,7 +181,7 @@ def crawl(driver, url, depth, visited, rows):
             # Recursion
             if depth < MAX_DEPTH:
                 for l_url in links_urls:
-                        crawl(driver, l_url, depth + 1, visited, rows)
+                        crawl(driver, l_url, depth + 1, visited, seen_questions,rows)
 
     finally:
         if depth > 0:
@@ -202,7 +202,7 @@ def run_dropbox(driver):
     time.sleep(2)
         
     # Start scraping
-    crawl(driver, MAIN_URL, 0, visited, data)
+    crawl(driver, MAIN_URL, 0, visited, seen_questions, data)
 
     print(f"-- Finished Dropbox FAQ Scrapping ({len(data)} rows) ---")
     return pd.DataFrame(data)
