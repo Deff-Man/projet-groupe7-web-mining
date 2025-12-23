@@ -6,12 +6,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
- 
-#Output folder and file path
-OUTPUT_FOLDER = "/Users/matthieubeaumont/Desktop/Bureau/Projet_FAQ_web_mining/faq_scraper/faq_scraper/spiders"
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "nvidia_faq.csv")
- 
+
+
 #Main URL to start scraping
 MAIN_URL = "https://www.nvidia.com/en-us/geforce-now/faq/"
 SITE_NAME = "NVIDIA"
@@ -71,7 +67,7 @@ def get_answer(driver, question):
     return "Content not found"
  
 # -- Recursive scraper --
-def crawl(driver, url, depth, visited, rows):
+def crawl(driver, url, depth, visited,seen_questions, rows):
     #Skip URL(s) that have already been visited
     if url in visited:
         return
@@ -106,9 +102,9 @@ def crawl(driver, url, depth, visited, rows):
             q_text = clean_text(q)
  
             #Filter out non-questions or duplicates
-            if "?" not in q_text or len(q_text) < 10 or q_text in seen:
+            if "?" not in q_text or len(q_text) < 10 or q_text in seen_questions:
                 continue
-            seen.add(q_text)
+            seen_questions.add(q_text)
  
             #Category
             category = "NA"
@@ -201,7 +197,7 @@ def crawl(driver, url, depth, visited, rows):
             #Recursion
             if depth < MAX_DEPTH:
                 for l_url in links_urls:
-                    crawl(driver, l_url, depth + 1, visited, rows)
+                    crawl(driver, l_url, depth + 1, visited, seen_questions, rows)
  
     finally:
         if depth > 0:
@@ -209,37 +205,18 @@ def crawl(driver, url, depth, visited, rows):
             driver.switch_to.window(parent)
  
 #MAIN
-def main():
- 
-    #Configure Chrome options
-    options = Options()
-    options.add_argument("--disable-gpu")
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
- 
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=options)
- 
+def run_nvidia(driver):
+
     data = []
     visited = set()
+    seen_questions = set()
  
-    try:
-        #Load the main FAQ page
-        driver.get(MAIN_URL)
-        time.sleep(2)
+    #Load the main FAQ page
+    driver.get(MAIN_URL)
+    time.sleep(2)
  
-        #Start scraping
-        crawl(driver, MAIN_URL, 0, visited, data)
-       
-        #Save results to CSV
-        df = pd.DataFrame(data)
-        df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
-        print(f"\nFile saved at:\n{OUTPUT_FILE}")
- 
-    finally:
-        driver.quit()
- 
-if __name__ == "__main__":
-    main()
+    #Start scraping
+    crawl(driver, MAIN_URL, 0, visited, seen_questions, data)
+
+    print(f" Finished Nvidia FAQ scraping ({len(data)}) rows")
+    return pd.DataFrame(data)
