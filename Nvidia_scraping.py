@@ -66,7 +66,7 @@ def get_answer(driver, question):
  
     return "Content not found"
  
-# -- Recursive scraper --
+# Recursive scraper
 def crawl(driver, url, depth, visited,seen_questions, rows):
     #Skip URL(s) that have already been visited
     if url in visited:
