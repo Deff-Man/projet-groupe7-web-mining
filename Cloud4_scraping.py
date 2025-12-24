@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 import os
 import time
-import pandas as pd 
+import pandas as pd
  
 #CONFIGURATION
 BASE_URL = "https://cloud.ibm.com/docs/schematics?topic=schematics-general-faq&mhsrc=ibmsearch_a&mhq=faq&locale=en"
