@@ -170,5 +170,5 @@ def scrape_asana(driver, url):
     except Exception as e:
         print(f"Error: {e}")
 
-    return rows
+    return pd.DataFrame(rows)
 
