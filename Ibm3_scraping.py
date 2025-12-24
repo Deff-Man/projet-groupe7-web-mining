@@ -66,6 +66,6 @@ def run_ibm3():
                     "link_name": ", ".join(link_names) if link_names else "NA",
                     "linked_page_title": ", ".join(linked_titles) if linked_titles else "NA"
                 })
-
+                
         browser.close()
     return pd.DataFrame(rows)
