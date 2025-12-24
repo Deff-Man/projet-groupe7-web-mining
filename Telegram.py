@@ -76,8 +76,10 @@ def save_entry(data_list, url, question, answer_parts, category, links_data):
         })
 
 def scrape_telegram_faq(driver, url, main_window):
+    url = "https://telegram.org/faq"
+    main_window = driver.current_window_handle 
     page_data = []
-    
+
     try:
         driver.get(url)
     except:
