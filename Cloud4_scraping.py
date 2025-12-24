@@ -23,7 +23,7 @@ def fetch_link_title(context, url):
         page.wait_for_load_state("domcontentloaded")
         html = page.content()
         soup = BeautifulSoup(html, "html.parser")
-        # Cherche la div qui contient le titre
+        #look for the div containing the title
         div_title = soup.find("div", class_="contentHeader_Title")
         title = div_title.get_text(strip=True) if div_title else "NA"
         page.close()
