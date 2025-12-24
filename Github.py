@@ -33,13 +33,13 @@ def scrape_github():
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             print(f"HTTP Error: {response.status_code}")
-            return []
+            return pd.DataFrame()
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
     except Exception as e:
         print(f"Connection Error: {e}")
-        return []
+        return pd.DataFrame()
 
     all_data = []
     
