@@ -18,7 +18,7 @@ chrome_options.add_argument("--start-maximized")
 # User agent to avoid being detected as a robot
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 #Clean up the text: remove line breaks and multiple spaces
 def clean_text(text):
@@ -81,7 +81,7 @@ def get_articles_from_home(driver, main_url):
     print(f"{len(articles_list)} questions found.")
     return articles_list
 
-#Article content extractio 
+#Article content extraction
 def scrape_article_content(driver, article_data):
     url = article_data['url']
     question = article_data['question']
@@ -164,38 +164,20 @@ def scrape_article_content(driver, article_data):
         print(f"Technical error on {url}: {e}")
         return None
 
-# --- BLOC DE TEST SÉCURISÉ ---
-if __name__ == "__main__":
-    try:
-        print("--- Démarrage du scraping Airbnb FAQ (Mode Deep Crawl) ---")
-        
-        # 1. Récupération de la liste des liens d'articles
-        articles = get_articles_from_home(driver, base_url)
-        
-        # 2. On limite le test aux 5 premiers articles pour ne pas attendre trop longtemps
-        test_articles = articles[:5]
-        all_results = []
-        
-        print(f"\nDébut de l'extraction détaillée pour les {len(test_articles)} premiers articles...")
-        
-        for art in test_articles:
-            result = scrape_article_content(driver, art)
-            if result:
-                all_results.append(result)
-        
-        # 3. Conversion en DataFrame et affichage
-        df_airbnb = pd.DataFrame(all_results)
-        
-        if not df_airbnb.empty:
-            print("\n" + "="*50)
-            print("APERÇU DES 5 PREMIÈRES LIGNES COMPLÈTES")
-            print("="*50)
-            print(df_airbnb.to_string(index=False))
-        else:
-            print("\nAucune donnée extraite. Vérifiez les sélecteurs.")
-
-    except Exception as e:
-        print(f"\nUne erreur est survenue durant le test : {e}")
-    finally:
-        print("\nFermeture du navigateur...")
-        driver.quit()
+# FUNCTION TO CONNECT WITH MAIN.PY
+def run_airbnb(driver):
+    base_url = "https://www.airbnb.com/resources/hosting-homes/t/common-questions-23"
+    
+    # 1. Get the list of articles
+    articles = get_articles_from_home(driver, base_url)
+    
+    results = []
+    
+    # 2. Scrape each article
+    for art_data in articles:
+        res = scrape_article_content(driver, art_data)
+        if res:
+            results.append(res)
+            
+    # 3. Return as DataFrame
+    return pd.DataFrame(results)
