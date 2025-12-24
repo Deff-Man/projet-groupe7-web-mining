@@ -1,8 +1,8 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
-import pandas as pd
 import csv
 import os
+import pandas as pd
 
 Base_URL = "https://cloud.ibm.com/docs/storage-scale?topic=storage-scale-storage-scale-faqs"
 SITE_NAME = "IBM Cloud"
@@ -95,3 +95,7 @@ def run_ibm_cloud():
                 "link_name": ", ".join(link_names) if link_names else "NA",
                 "linked_page_title": ", ".join(linked_titles) if linked_titles else "NA"})
     return pd.DataFrame(rows)
+
+
+
+
