@@ -88,7 +88,7 @@ def run_ibmtaxi():
                     if name not in link_names:
                         link_names.append(name)
                         linked_page_titles.append(fetch_page_title(a["href"]))
-
+                        
     #Save last FAQ
     save_current()
     return pd.DataFrame(data)
