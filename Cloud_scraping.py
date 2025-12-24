@@ -8,7 +8,7 @@ Base_URL = "https://cloud.ibm.com/docs/storage-scale?topic=storage-scale-storage
 SITE_NAME = "IBM Cloud"
 
 def run_ibm_cloud():
-    #LOAD PAGE WITH PLAYWRIGHT
+    #Load page and get HTML
     with sync_playwright() as p:
         browser = p.firefox.launch(headless=True)
         page = browser.new_page()
@@ -19,13 +19,13 @@ def run_ibm_cloud():
 
     soup = BeautifulSoup(html, "html.parser")
 
-    #COLLECT FAQ BLOCKS
+    #Collect FAQ sections
     faq_sections = soup.select("section[data-hd-content-type='faq']")
 
     rows = []
     seen_questions = set()
 
-    #PARSE STANDARD FAQ SECTIONS
+    #Parse sections
     for section in faq_sections:
         h2 = section.find("h2")
         if not h2:
@@ -57,7 +57,7 @@ def run_ibm_cloud():
             "linked_page_title": ", ".join(linked_titles) if linked_titles else "NA"})
 
 
-    #FALLBACK: LAST FAQS OUTSIDE SECTIONS
+    #Fallback: look for all h2 as questions
     all_h2 = soup.find_all("h2")
 
     for h2 in all_h2:
@@ -95,7 +95,3 @@ def run_ibm_cloud():
                 "link_name": ", ".join(link_names) if link_names else "NA",
                 "linked_page_title": ", ".join(linked_titles) if linked_titles else "NA"})
     return pd.DataFrame(rows)
-
-
-
-
