@@ -54,7 +54,8 @@ def get_linked_page_title(driver, url, main_window):
     return title
 
 #Main function to iterate through categories and accordion items.
-def scrape_pinterest_final(driver, url):
+def scrape_pinterest_final():
+    url = "https://create.pinterest.com/fr/faq/"
     try:
         driver.get(url)
     except TimeoutException:
