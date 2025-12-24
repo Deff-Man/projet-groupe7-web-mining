@@ -134,5 +134,4 @@ def scrape_pinterest_final(driver, url):
                 except Exception as e:
                     print(f"Error bypassed: {e}")
                     continue
-
-    return data_list
+    return pd.DataFrame(data_list)
