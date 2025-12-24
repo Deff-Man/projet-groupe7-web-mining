@@ -8,6 +8,14 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from deep_translator import GoogleTranslator
 
+# Chrome_options
+chrome_options = Options()
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--window-size=1920,1080") 
+    
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options) 
 # Main URL to start scraping
 MAIN_URL = "https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0063407"
 SITE_NAME = "Zoom"
