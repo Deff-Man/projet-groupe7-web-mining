@@ -11,7 +11,7 @@ from Adobe_scrapping import run_adobe
 from Dropbox_scraping import run_dropbox
 from SAP_scrapping import run_sap
 from Salesforce_scrapping import run_salesforce
-from Zoom_scraping import run_zoom
+from zoom_scraping import run_zoom
 
 def main():
     # Define the output and file path
@@ -21,7 +21,9 @@ def main():
 
     # Configure Chrome options 
     options = Options()
-    
+    options.add_argument("--disable-gpu")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+
     # Initialize the WebDriver 
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
