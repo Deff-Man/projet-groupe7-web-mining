@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 import os
 import pandas as pd
 
-#CONFIGURATION
+#Configuration
 BASE_URL = "https://oasis-open.github.io"
 FAQ_URL = f"{BASE_URL}/cti-documentation/faq"
 SITE_NAME = "IBM"
@@ -13,13 +13,13 @@ HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 def run_ibmtaxi():
     
-    #REQUEST FAQ PAGE
+    #Request FAQ page
     response = requests.get(FAQ_URL, headers=HEADERS)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     elements = soup.find_all(["h2", "h3", "p"])
 
-    #STORAGE
+    #Storage
     data = []
     current_category = None
     current_question = None
@@ -27,7 +27,7 @@ def run_ibmtaxi():
     link_names = []
     linked_page_titles = []
 
-    #HELPERS
+    #Helpers
     def is_internal_link(href):
         return href and href.startswith("/cti-documentation")
 
@@ -56,10 +56,10 @@ def run_ibmtaxi():
             })
 
 
-    #PARSING
+    #Parse elements
     for el in elements:
 
-        #CATEGORY
+        #Category
         if el.name == "h2":
             save_current()
             current_category = el.get_text(" ", strip=True)
@@ -68,7 +68,7 @@ def run_ibmtaxi():
             link_names = []
             linked_page_titles = []
 
-        #QUESTION
+        #Question
         elif el.name == "h3":
             save_current()
             current_question = el.get_text(" ", strip=True)
@@ -76,7 +76,7 @@ def run_ibmtaxi():
             link_names = []
             linked_page_titles = []
 
-        #ANSWER
+        #Answer
         elif el.name == "p" and current_question:
             text = el.get_text(" ", strip=True)
             if text:
