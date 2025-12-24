@@ -113,4 +113,4 @@ def scrape_github():
             print(f"Error on item: {e}")
             continue
 
-    return all_data
+    return pd.DataFrame(all_data)
