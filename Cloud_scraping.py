@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
+import pandas as pd
 import csv
 import os
 
@@ -93,4 +94,4 @@ def run_ibm_cloud():
                 "internal_link": 1 if link_names else 0,
                 "link_name": ", ".join(link_names) if link_names else "NA",
                 "linked_page_title": ", ".join(linked_titles) if linked_titles else "NA"})
-    return rows
+    return pd.DataFrame(rows)
