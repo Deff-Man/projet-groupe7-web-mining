@@ -204,7 +204,7 @@ def crawl(driver, url, depth, visited,seen_questions, rows):
             driver.close()
             driver.switch_to.window(parent)
  
-#MAIN
+#Main
 def run_nvidia(driver):
 
     data = []
