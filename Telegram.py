@@ -167,4 +167,4 @@ def scrape_telegram_faq(driver, url, main_window):
     except Exception as e:
         print(f"Erreur globale : {e}")
 
-    return page_data
+    return pd.DataFrame(page_data)
