@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 import requests
+import pandas as pd
 
 # CONFIGURATION
 BASE_URL = "https://exchange.xforce.ibmcloud.com/faq?mhsrc=ibmsearch_a&mhq=faq&_gl=1*y45q7e*_ga*MjM3OTU1NTI0LjE3NjU3MzM4ODg.*_ga_FYECCCS21D*czE3NjYyNTAzNDYkbzYkZzEkdDE3NjYyNTA1NzkkajIwJGwwJGgw"
@@ -67,4 +68,4 @@ def run_ibm3():
                 })
 
         browser.close()
-    return rows
+    return pd.DataFrame(rows)
