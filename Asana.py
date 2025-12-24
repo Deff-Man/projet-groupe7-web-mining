@@ -63,7 +63,8 @@ def extract_links_data(driver, element, main_window):
     return links_data
 
 
-def scrape_asana(driver, url):
+def scrape_asana():
+    url = "https://asana.com/fr/faq"
     driver.get(url)
     time.sleep(4)
     
