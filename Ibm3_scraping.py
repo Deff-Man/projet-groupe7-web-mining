@@ -7,7 +7,7 @@ import pandas as pd
 BASE_URL = "https://exchange.xforce.ibmcloud.com/faq?mhsrc=ibmsearch_a&mhq=faq&_gl=1*y45q7e*_ga*MjM3OTU1NTI0LjE3NjU3MzM4ODg.*_ga_FYECCCS21D*czE3NjYyNTAzNDYkbzYkZzEkdDE3NjYyNTA1NzkkajIwJGwwJGgw"
 SITE_NAME = "IBM"
 
-# --- Helper pour récupérer le titre d'un lien ---
+#Helper to fetch link title using requests
 def fetch_link_title_requests(url):
     try:
         r = requests.get(url, timeout=5)
@@ -21,7 +21,7 @@ def fetch_link_title_requests(url):
         return "NA"
     return "NA"
 
-# --- Scraping principal ---
+#Scraping principal
 def run_ibm3():
     with sync_playwright() as p:
         browser = p.firefox.launch(headless=True)
@@ -38,7 +38,7 @@ def run_ibm3():
         for section in sections:
             category = section.get_text(strip=True) if section else "NA"
 
-            # Questions et réponses dans la section
+            # Questions and answers within the section
             for q in section.find_all_next("h4", class_="faqquestion"):
                 next_section = q.find_previous("h3", class_="sectionheading")
                 if next_section != section:
@@ -48,7 +48,7 @@ def run_ibm3():
                 answer_elem = q.find_next("p", class_="faqanswer")
                 answer = answer_elem.get_text(" ", strip=True) if answer_elem else "Content not found"
 
-                # Liens dans la réponse
+                # Links in the answer
                 link_names = []
                 linked_titles = []
                 if answer_elem:
