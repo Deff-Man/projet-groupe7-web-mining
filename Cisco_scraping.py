@@ -237,6 +237,6 @@ def run_cisco(driver):
     driver.get(MAIN_URL)
     time.sleep(2)
     crawl(driver, MAIN_URL, 0, visited, seen_questions, data)
-
+    
     print(f" Finished Cisco FAQ scraping ({len(data)} rows).")
     return pd.DataFrame(data)
