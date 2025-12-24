@@ -5,7 +5,7 @@ import os
 import time
 import pandas as pd
  
-#CONFIGURATION
+#Configuration
 BASE_URL = "https://cloud.ibm.com/docs/schematics?topic=schematics-general-faq&mhsrc=ibmsearch_a&mhq=faq&locale=en"
 SITE_NAME = "IBM Cloud"
  
@@ -31,7 +31,7 @@ def fetch_link_title(context, url):
         pass
     return title
  
-#SCRAPING
+#Scraping principal
 def run_ibm(driver):
     with sync_playwright() as p:
         browser = p.firefox.launch(headless=True)
@@ -47,7 +47,7 @@ def run_ibm(driver):
         rows = []
         seen_questions = set()
  
-        #COLLECT FAQ SECTIONS
+        #Collect FAQ blocks
         faq_sections = soup.select("section[data-hd-content-type='faq']")
         print("FAQ sections found:", len(faq_sections))
  
