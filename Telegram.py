@@ -75,7 +75,7 @@ def save_entry(data_list, url, question, answer_parts, category, links_data):
             "linked_page_title": link_titles_str # Remote page HTML title
         })
 
-def scrape_telegram_faq(driver, url, main_window):
+def scrape_telegram_faq():
     url = "https://telegram.org/faq"
     main_window = driver.current_window_handle 
     page_data = []
