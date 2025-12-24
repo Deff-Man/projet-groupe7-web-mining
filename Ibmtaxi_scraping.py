@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 from urllib.parse import urljoin
 import os
+import pandas as pd
 
 #CONFIGURATION
 BASE_URL = "https://oasis-open.github.io"
@@ -90,4 +91,4 @@ def run_ibmtaxi():
 
     #Save last FAQ
     save_current()
-    return data
+    return pd.DataFrame(data)
