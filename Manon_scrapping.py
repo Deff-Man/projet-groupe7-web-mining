@@ -8,10 +8,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Import scrapping modules
 from Notion_scrapping import run_notion
 from Adobe_scrapping import run_adobe
-from Dropbox_scrapping import run_dropbox
+from Dropbox_scraping import run_dropbox
 from SAP_scrapping import run_sap
 from Salesforce_scrapping import run_salesforce
-from Zoom_scrapping import run_zoom
+from zoom_scraping import run_zoom
 
 def main():
     # Define the output and file path
