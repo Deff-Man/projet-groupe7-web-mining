@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
+
 # Import scrapping modules
 from Notion_scrapping import run_notion
 from Adobe_scrapping import run_adobe
@@ -13,12 +14,8 @@ from SAP_scrapping import run_sap
 from Salesforce_scrapping import run_salesforce
 from zoom_scraping import run_zoom
 
-def main():
-    # Define the output and file path
-    OUTPUT_FOLDER = r"C:\Users\User\Desktop\Master 1\Web mining\Scrapper"
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-    FINAL_OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "faq_commun.csv")
 
+def run_manon():
     # Configure Chrome options 
     options = Options()
     options.add_argument("--disable-gpu")
@@ -59,26 +56,10 @@ def main():
                 # Individual module error 
                 print(f"-> {name} failed: {e}")
 
-        # Data saving
         if all_dataframes:
-
-            # Concatenate all collected DataFrames 
-            final_df = pd.concat(all_dataframes, ignore_index=True)
-
-            # Export to CSV 
-            final_df.to_csv(FINAL_OUTPUT_FILE, index=False, encoding="utf-8-sig")
-            
-            print(f"SUCCESS: Consolidated file saved at :")
-            print(f"{FINAL_OUTPUT_FILE}")
-            print(f"Total rows collected across all sites: {len(final_df)}")
-        else:
-            print("\nProcess finished but no data was collected from any site.")
-
-    except Exception as e:
-        print(f"\nCRITICAL ERROR during orchestration: {e}")
+            return pd.concat(all_dataframes, ignore_index=True)
+        return pd.DataFrame() 
 
     finally:
         driver.quit()
 
-if __name__ == "__main__":
-    main()
