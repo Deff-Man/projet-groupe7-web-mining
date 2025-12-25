@@ -17,11 +17,7 @@ from Intel_scraping import run_intel
 from Docker_scraping import run_docker
 from Nvidia_scraping import run_nvidia
  
-def main():
-    # Define the output and file path
-    OUTPUT_FOLDER = "/Users/matthieubeaumont/Desktop/Bureau/Projet_FAQ_web_mining/faq_scraper/faq_scraper/spiders"
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-    FINAL_OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "faq_commun.csv")
+def run_matthieu():
  
     # Configure Chrome options
     options = Options()
@@ -57,7 +53,7 @@ def main():
                     df = func(driver)   # Selenium scrapers
                 else:
                     df = func()         # Playwright / Requests scrapers
-
+ 
                
                 # Check if data was successfully collected
                 if df is not None and isinstance(df, pd.DataFrame) and not df.empty:
@@ -72,24 +68,8 @@ def main():
  
         # Data saving
         if all_dataframes:
- 
-            # Concatenate all collected DataFrames
-            final_df = pd.concat(all_dataframes, ignore_index=True)
- 
-            # Export to CSV
-            final_df.to_csv(FINAL_OUTPUT_FILE, index=False, encoding="utf-8-sig")
-           
-            print(f"SUCCESS: Consolidated file saved at :")
-            print(f"{FINAL_OUTPUT_FILE}")
-            print(f"Total rows collected across all sites: {len(final_df)}")
-        else:
-            print("\nProcess finished but no data was collected from any site.")
- 
-    except Exception as e:
-        print(f"\nCRITICAL ERROR during orchestration: {e}")
+            return pd.concat(all_dataframes, ignore_index=True)
+        return pd.DataFrame()
  
     finally:
         driver.quit()
- 
-if __name__ == "__main__":
-    main()  
