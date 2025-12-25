@@ -1,0 +1,232 @@
+import time
+import os
+import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from deep_translator import GoogleTranslator
+
+# Main URL to start scraping
+MAIN_URL = "https://helpx.adobe.com/acrobat/faq.html"
+SITE_NAME = "Adobe"
+# MAX_DEPTH : 1 = Main page + linked pages
+MAX_DEPTH = 1
+
+
+# -- Help functions --
+
+# 0/ Translates text to English using deep_translator
+def translate(text):
+    if not text or text == "NA" or text == "Content not found":
+        return text
+    try:
+        return GoogleTranslator(source='auto', target='en').translate(text)
+    except Exception:
+        return text
+
+# 1/ Removes extra spaces from the text content of an element
+def clean_text(element):
+    if not element: return ""
+    return " ".join(element.get_attribute("textContent").split())
+
+
+# 2/ Retrieves the H1 title of a linked page using a temporary browser tab
+def get_link_title(driver, url):
+    parent = driver.current_window_handle
+    title = "NA"
+
+    try:
+        driver.execute_script(f"window.open('{url}', '_blank');")
+        driver.switch_to.window(driver.window_handles[-1])
+        time.sleep(2)
+        raw_title = clean_text(driver.find_element(By.TAG_NAME, "h1"))
+        title = translate(raw_title)
+        driver.close()
+    except:
+        pass
+    finally:
+        driver.switch_to.window(parent)
+
+    return title
+
+# 3/ Finds and extracts the answer associated with a given question element
+def get_answer(driver, question):
+    # Try clicking the question in case the answer is hidden (accordion)
+    try:
+        driver.execute_script("arguments[0].click();", question)
+        time.sleep(0.3)
+    except:
+        pass
+
+    # Try to locate the answer using the aria-labelledby attribute
+    try:
+        qid = question.get_attribute("id")
+        if qid:
+            ans_element = driver.find_element(By.XPATH, f"//*[@aria-labelledby='{qid}']")
+            return clean_text(ans_element)
+    except:
+        pass
+
+    # Try to find the answer in the next sibling elements
+    try:
+        for sib in question.find_elements(By.XPATH, "following-sibling::*[position() <= 3]"):
+            txt = clean_text(sib)
+            if len(txt) > 10:
+                return txt
+    except:
+        pass
+
+    return "Content not found"
+
+
+# -- Recursive scraper --
+def crawl(driver, url, depth, visited, seen_questions, rows):
+    # Skip URL(s) that have already been visited
+    if url in visited or depth > MAX_DEPTH:
+        return
+    visited.add(url)
+
+    # Print to see current progress
+    print(f"{'  '*depth}→ Scraping (depth {depth}): {url}")
+
+    parent_window = driver.current_window_handle
+    if depth > 0:
+        # Open subpage in a new tab if depth > 0
+        driver.execute_script(f"window.open('{url}', '_blank');")
+        driver.switch_to.window(driver.window_handles[-1])
+        time.sleep(3)
+
+
+    try:
+        # Accept cookies if the popup appears
+        try:
+            driver.find_element(By.ID, "onetrust-accept-btn-handler").click()
+        except:
+            pass
+
+        # Scroll to load dynamic content
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(1)
+
+        # Find all possible question elements
+        questions = driver.find_elements(By.XPATH, "//h2 | //h3 | //button | //dt")
+
+        for q in questions:
+            q_text_raw = clean_text(q)
+
+            # Filter out non-questions or duplicates
+            if "?" not in q_text_raw or len(q_text_raw) < 10 or q_text_raw in seen_questions:
+                continue
+            seen_questions.add(q_text_raw)
+            
+            # Category extraction
+            category = "NA"
+            try:
+                # Find the closest H2 (direct category) and H1 (super category)
+                direct_cat = q.find_elements(By.XPATH, "preceding::h2[1]")
+                super_cat = q.find_elements(By.XPATH, "preceding::h1[1]")
+                
+                titles = []
+                forbidden_phrases = ["faq", "frequently asked questions"]
+
+                # Process super category (H1)
+                if super_cat:
+                    s_txt = clean_text(super_cat[0])
+                    if not any(phrase in s_txt.lower() for phrase in forbidden_phrases) and "adobe acrobat" not in s_txt.lower():
+                        titles.append(s_txt)
+
+                # Process direct category (H2)
+                if direct_cat:
+                    d_txt = clean_text(direct_cat[0])
+                    if not any(phrase in d_txt.lower() for phrase in forbidden_phrases) and d_txt not in titles:
+                        titles.append(d_txt)
+                
+                # Join and Translate multiple categories
+                category = translate(", ".join(titles)) if titles else "NA"
+            except:
+                category = "NA"
+            
+            
+            # Answer extraction and translation
+            raw_answer = get_answer(driver, q)
+            answer = translate(raw_answer)
+
+            # Links extraction
+            links_urls = []
+            links_names = [] 
+            links_titles = []
+
+            try:
+                # Get the container of the answer to find links inside
+                qid = q.get_attribute("id")
+                answer_container = None
+                if qid:
+                    try:
+                        answer_container = driver.find_element(By.XPATH, f"//*[@aria-labelledby='{qid}']")
+                    except: pass
+                
+                if not answer_container:
+                    potential_links = q.find_elements(By.XPATH, "following-sibling::*[position() <= 2]//a")
+                else:
+                    potential_links = answer_container.find_elements(By.TAG_NAME, "a")
+
+                for a in potential_links:
+                    href = a.get_attribute("href")
+                    if href and "http" in href and href != url and href not in links_urls:
+                        links_urls.append(href)
+                        links_names.append(translate(clean_text(a)))
+                        
+                        # Fetch the title of the linked page
+                        links_titles.append(get_link_title(driver, href))
+                    
+                    if len(links_urls) >= 5:
+                        break
+            except:
+                pass
+
+            # Joins multiple items with a comma
+            def format_for_csv(items):
+                return ", ".join(items) if items else "NA"
+
+            # Save data 
+            rows.append({
+                "site_name": SITE_NAME,
+                "url": url,
+                "question": translate(q_text_raw),
+                "answer": answer,
+                "category": category,
+                "internal_link": 1 if links_urls else 0,
+                "link_name": format_for_csv(links_names), 
+                "linked_page_title": format_for_csv(links_titles) 
+            })
+
+            # Recursion
+            if depth < MAX_DEPTH:
+                for l_url in links_urls:
+                    crawl(driver, l_url, depth + 1, visited, seen_questions, rows)
+
+    finally:
+        if depth > 0:
+            driver.close()
+            driver.switch_to.window(parent_window)
+
+
+# -- MAIN --
+def run_adobe(driver):
+    
+    data = []
+    visited = set()
+    seen_questions = set()
+
+  
+    # Load the main FAQ page
+    driver.get(MAIN_URL)
+    time.sleep(2)
+        
+    # Start scraping
+    crawl(driver, MAIN_URL, 0, visited, seen_questions, data)
+
+    print(f"-- Finished Adobe FAQ Scrapping ({len(data)} rows) ---")
+    return pd.DataFrame(data)
