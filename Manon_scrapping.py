@@ -14,7 +14,6 @@ from SAP_scrapping import run_sap
 from Salesforce_scrapping import run_salesforce
 from zoom_scraping import run_zoom
 
-
 def run_manon():
     # Configure Chrome options 
     options = Options()
