@@ -99,9 +99,13 @@ def nmf_topics_from_tfidf(
                 "weight": float(H_best[topic_id, j]),})
  
     pd.DataFrame(topics_rows).to_csv(os.path.join(output_dir, f"topics_nmf_k{best_k}.csv"),index=False)
+    doc_topics_df = pd.DataFrame(Wn_best,columns=[f"topic_{i}" for i in range(best_k)])
+
+    doc_topics_df.to_csv(os.path.join(output_dir, f"doc_topics_nmf_k{best_k}.csv"),index=True,index_label="doc_id")
  
     print("Output written to:", output_dir)
     print(f"topics_nmf_k{best_k}.csv")
+    print(f"doc_topics_nmf_k{best_k}.csv")
  
 if __name__ == "__main__":
     # define input and output paths
