@@ -1,33 +1,46 @@
 # Pipeline - Faq Analysis - Project
+# This script orchestrates the full workflow : 
+# 1/ Scraping & Cleaning
+# 2/ Text Mining (Core, Descriptive, Semantic)
+# 3/ Link Analysis
 
 import pandas as pd
 import os
 import subprocess
 import sys
 
-# Import
+# injects the scraping directory into sys.path to allow internal 
+base_path = os.path.dirname(os.path.abspath(__file__))
+scraping_path = os.path.join(base_path, "Scripts", "Scraping", "data_collection_merging")
+if scraping_path not in sys.path:
+    sys.path.append(scraping_path)
+
+# importing main execution functions
 from Scripts.Scraping.data_collection_merging.scraping import main_ as launch_scraping
 from Scripts.Text_mining.text_mining import main as launch_text_mining
 from Scripts.Link_analysis.link_analysis_ import main as launch_link_analysis
 
-# Configuration
+# configuration
 run_scraper = False  
 
-# Data path
+# data path : update these paths to match your machine's directory structure.
+# data_raw is the output of the scraping process.
 data_raw = r"C:\Users\User\Desktop\Master 1\Web mining\faq_commun.csv"
+# data_clean is the output of the cleaning script and input for text mining analysis.
 data_clean = r"C:\Users\User\Desktop\Master 1\Web mining\faq_clean.csv"
 
-# Path scripts
+# path scripts
 cleaning_script = r"Scripts/Scraping/data_cleaning/cleaning_data.py"
 semantic_script = r"Scripts/Text_mining/semantic_textmining_application.py" 
 matrix_adjacency_script = r"Scripts/Link_analysis/matrix_adjacence.py" 
 descriptif_script = r"Scripts/Text_mining/descriptive_analysis.py"
 
 
+ 
 def main():
     print("Pipeline launch : ")
     
-    # User choices
+    # 0/ User choices
     do_text_mining = input("Run Step 2 (Text Mining)? (yes/no): ").lower() == 'yes'
     do_link_analysis = input("Run Step 3 (Link Analysis)? (yes/no): ").lower() == 'yes'
 
