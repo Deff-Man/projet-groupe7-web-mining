@@ -1,9 +1,9 @@
 import pandas as pd
 import os
 
-from Manon_scrapping import run_manon
-from Matthieu_scraping import run_matthieu
-from put_together import run_zoe
+from Scripts.Scraping.data_collection_merging.Manon_scrapping import run_manon
+from Scripts.Scraping.data_collection_merging.Matthieu_scraping import run_matthieu
+from Scripts.Scraping.data_collection_merging.put_together import run_zoe
 
 
 def main_():
