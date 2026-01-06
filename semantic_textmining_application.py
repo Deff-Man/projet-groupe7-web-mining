@@ -102,7 +102,36 @@ def nmf_topics_from_tfidf(
     doc_topics_df = pd.DataFrame(Wn_best,columns=[f"topic_{i}" for i in range(best_k)])
 
     doc_topics_df.to_csv(os.path.join(output_dir, f"doc_topics_nmf_k{best_k}.csv"),index=True,index_label="doc_id")
- 
+    
+    # count dominant topic per document
+    doc_topics_path = os.path.join(output_dir, f"doc_topics_nmf_k{best_k}.csv")
+
+    # reload doc-topic probabilities
+    df_topics = pd.read_csv(doc_topics_path)
+
+    # topic columns
+    topic_cols = [c for c in df_topics.columns if c.startswith("topic_")]
+    if len(topic_cols) == 0:
+        raise ValueError("No topic_* columns found in doc_topics file.")
+
+    # dominant topic per document
+    df_topics["dominant_topic"] = df_topics[topic_cols].idxmax(axis=1)
+
+    # counts + percentages
+    counts = df_topics["dominant_topic"].value_counts().sort_index()
+    percents = (counts / counts.sum() * 100).round(2)
+
+    # final table
+    summary_df = pd.DataFrame({
+        "dominant_topic": counts.index,
+        "n_docs": counts.values,
+        "pct_docs": percents.values})
+
+    # export
+    summary_path = os.path.join(output_dir, f"dominant_topic_counts_nmf_k{best_k}.csv")
+    summary_df.to_csv(summary_path, index=False)
+
+    print(f"dominant_topic_counts_nmf_k{best_k}.csv")
     print("Output written to:", output_dir)
     print(f"topics_nmf_k{best_k}.csv")
     print(f"doc_topics_nmf_k{best_k}.csv")
