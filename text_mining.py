@@ -14,12 +14,13 @@ import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_score
 matplotlib.use('TkAgg')
+import seaborn as sns
 
 #nltk.download('punkt')
 #nltk.download('punkt_tab')
 #nltk.download('stopwords')
 
-#pour lemmatization :
+#for lemmatization:
 #nltk.download('wordnet')
 #nltk.download('omw-1.4')
 #nltk.download('averaged_perceptron_tagger_eng')
@@ -33,7 +34,7 @@ def get_wordnet_pos(word):
                 "R": wordnet.ADV}
     return tag_dict.get(tag, wordnet.NOUN)
  
-#TOKENISAION PROCESS :
+#TOKENISATION PROCESS :
 #retrieve the list of English stopwords (words to ignore) and add “'s”
 stop_words = list(set(stopwords.words('english'))) + ["'s"]
 brand_names = ['adobe','sap','notion', 'dropbox', 'salesforce', 'zoom', 'cisco', 'ibm', 'docusign', 'docker','nvidia','asana', 'airbnb', 'apple','github','pinterest','proton', 'telegram']
@@ -213,7 +214,7 @@ def compute_bert_similarity(dataframe, column_name) :
     return similarity_df_bert
  
 def perform_sbert_clustering(dataframe, text_col, k=5, output_path=None, embeddings = None):
-    print(f"\n Starting SBERT cluserting (k={k}) : ")
+    print(f"\n Starting SBERT clustering (k={k}) : ")
    
     # 1/ SBERT encoding
     if embeddings is None :
@@ -263,7 +264,7 @@ def build_semantic_glove_matrix(docs_dictionary, docs_by_site, n_clusters=3):
         model = api.load("glove-wiki-gigaword-50")
     except Exception as e:
         print("GloVe loading error.")
-        return None
+        return None, None 
  
     # filter vocabulary to keep only words present in GloVe
     my_vocabulary = set()
@@ -280,20 +281,19 @@ def build_semantic_glove_matrix(docs_dictionary, docs_by_site, n_clusters=3):
     # clustering with KMeans to identify themes
     km = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     km.fit(vectors)
+    
     # creation of a word -> theme dictionary
     word_to_concept = dict(zip(my_vocabulary, km.labels_))
 
-    # automatic display and naming of themes
-    print("\n Themes identified : ")
+
+    df_lexique = pd.DataFrame(list(word_to_concept.items()), columns=['Mot', 'Cluster_ID'])
+    df_lexique = df_lexique.sort_values(by='Cluster_ID')
+
     col_names = []
-   
     for i in range(n_clusters):
-        # we retrieve the words from the cluster
-        terms = [w for w, c in word_to_concept.items() if c == i]
-        # a preview is displayed
-        preview = ", ".join(terms[:10])
+        words = df_lexique[df_lexique['Cluster_ID'] == i]['Mot'].tolist()
+        preview = ", ".join(words[:10])
         print(f"Theme {i+1} : {preview}...")
-        # name the columns
         col_names.append(f"Theme {i+1}")
        
     # construction of the Site x Theme matrix    
@@ -313,8 +313,68 @@ def build_semantic_glove_matrix(docs_dictionary, docs_by_site, n_clusters=3):
     # creating the DataFrame
     df_count = pd.DataFrame.from_dict(site_data, orient='index', columns=col_names)
    
-    return df_count
- 
+    # Return BOTH tables: the site matrix AND the word lexicon
+    return df_count, df_lexique
+
+def process_and_plot_themes(input_data, output_path_percentage=None):
+    # Load Data
+    if isinstance(input_data, str):
+        df = pd.read_excel(input_data)
+    else:
+        df = input_data.copy()
+
+    if 'Unnamed: 0' in df.columns:
+        df = df.rename(columns={'Unnamed: 0': 'Site'})
+        df = df.set_index('Site')
+    elif 'Site' in df.columns:
+        df = df.set_index('Site')
+
+    if pd.api.types.is_numeric_dtype(df.index):
+        df = df.set_index(df.columns[0])
+
+    df.index.name = "Entreprises" 
+  
+    df_numeric = df.select_dtypes(include=['number'])
+    row_sums = df_numeric.sum(axis=1)
+    df_percent = df_numeric.div(row_sums, axis=0).fillna(0)
+
+    # Save Excel
+    if output_path_percentage:
+        df_percent.to_excel(output_path_percentage)
+        print(f"Percentages saved : {output_path_percentage}")
+
+    # graph preparation
+    noms_themes = {
+        "Theme 1": "T1: Vie d'entreprise / Communauté",     
+        "Theme 2": "T2: Légale & Conformité",     
+        "Theme 3": "T3: Usage Produit & Outils",  
+        "Theme 4": "T4: Tech & Développement ",      
+        "Theme 5": "T5: Finance & Facturation"     
+    }
+    df_plot = df_percent.rename(columns=noms_themes)
+
+    #Bar Chart
+    plt.figure(figsize=(14, 8))
+    df_plot.plot(kind='bar', stacked=True, colormap='viridis', figsize=(14, 8), width=0.8)
+    plt.title("Répartition Thématique par Entreprise", fontsize=16)
+    plt.xlabel("Entreprises", fontsize=12)
+    plt.ylabel("Proportion", fontsize=12)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+    # Heatmap 
+    sim_matrix = cosine_similarity(df_plot)
+    similarity_df = pd.DataFrame(sim_matrix, index=df_plot.index, columns=df_plot.index)
+
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(similarity_df, annot=True, cmap='coolwarm', fmt=".2f")
+    plt.title("Matrice de Similarité", fontsize=16)
+    plt.tight_layout()
+    plt.show()
+    
+    return df_percent
+
 def plot_similarity_matrix(similarity_df, title = "Document Similarity Matrix"):
     # Plot the similarity matrix
     similarity_df = similarity_df.fillna(0)
@@ -397,7 +457,7 @@ def main ():
  
         # 3/ term-document matrix
         matrix = build_term_document_matrix(docs)
-        print("Filtered term-cocument matrix:")
+        print("Filtered term-document matrix:")
         print(matrix)
         matrix.to_excel(base_path + "1_matrix_term_doc.xlsx")
  
@@ -412,7 +472,7 @@ def main ():
         print(f"Number of identified sites : {len(docs_by_site)}")
         print("Sites :", list(docs_by_site.keys()))
  
-        # 5a/ term-dcument matrix by site
+        # 5a/ term-document matrix by site
         matrix_site = build_term_document_matrix(docs_by_site)
         print("\n filtered term-document matrix by site :")
         print(matrix_site)
@@ -425,23 +485,30 @@ def main ():
         tf_idf_site.to_excel(base_path + "4_matrix_tfidf_par_site.xlsx")
  
         # 6/ theme with GloVe
-        df_count = build_semantic_glove_matrix(docs, docs_by_site, n_clusters=5)
-        print("final result : matrix site x theme ")
-        print(df_count.astype(int))
-        df_count.to_excel(base_path + "5_matrix_site_themes_glove.xlsx")
-   
-        # 6a/ TF-IDF on themes
-        print("\n TF-IDF Matrix by Topics:")
-        df_tfidf_themes = compute_tf_idf(df_count)
-        print(df_tfidf_themes)
-        df_tfidf_themes.to_excel(base_path + "6_tfidf_themes_glove.xlsx")
+        df_count, df_lexique = build_semantic_glove_matrix(docs, docs_by_site, n_clusters=5)
+        
+        if df_count is not None:
+            #Save raw data (Counts)
+            print(df_count.astype(int))
+            df_count.to_excel(base_path + "5_matrix_site_themes_glove.xlsx")
+            
+            #Save lexicon
+            path_lexique = base_path + "5b_detail_mots_par_theme.xlsx"
+            df_lexique.to_excel(path_lexique, index=False)
+            
+            #Define output path for percentage file
+            path_pourcentage = base_path + "repartition_themes_pourcentage.xlsx"
+            
+            #Call the main processing function with raw data (df_count)
+            process_and_plot_themes(df_count, output_path_percentage=path_pourcentage)
+
  
-        # 7/ Similairty TF-IDF
+        # 7/ Similarity TF-IDF
         # compute the cosine similarity matrix for TF-IDF
         similarity_matrix_tfidf = cosine_similarity(tf_idf_matrix)
         similarity_df_tfidf = pd.DataFrame(similarity_matrix_tfidf, index=tf_idf_matrix.index, columns=tf_idf_matrix.index)
  
-        # 8/ similairty BERT
+        # 8/ similarity BERT
         texts = df['question'].astype(str).tolist()
         embeddings = compute_bert_embeddings(texts)
  
